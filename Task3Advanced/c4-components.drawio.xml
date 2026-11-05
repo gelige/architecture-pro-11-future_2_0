@@ -1,0 +1,72 @@
+<mxfile host="Electron">
+  <diagram id="components" name="Компоненты потоковой обработки">
+    <mxGraphModel dx="1862" dy="977" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;align=left;fontSize=20;fontStyle=1;" value="Будущее 2.0&#xa;Детализация контейнера «Потоковая обработка»" vertex="1">
+          <mxGeometry height="70" width="1430" x="30" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" parent="1" style="dashed=1;fillColor=#f5faff;strokeColor=#1168bd;verticalAlign=top;spacing=15;fontSize=16;" value="" vertex="1">
+          <mxGeometry height="230" width="1170" x="290" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;whiteSpace=wrap;" value="Событийная платформа&#xa;[Контейнер: Kafka]&#xa;Доменные топики и DLQ" vertex="1">
+          <mxGeometry height="100" width="220" x="30" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="receive" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;whiteSpace=wrap;" value="Приём событий&#xa;[Компонент: Kafka source]&#xa;Чтение, удаление дублей" vertex="1">
+          <mxGeometry height="100" width="220" x="320" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="validate" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;whiteSpace=wrap;" value="Проверка и очистка&#xa;[Компонент: Validator]&#xa;Схема, разрешённые поля,&#xa;псевдонимизация" vertex="1">
+          <mxGeometry height="100" width="220" x="620" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="aggregate" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;whiteSpace=wrap;" value="Расчёт показателей&#xa;[Компонент: Aggregator]&#xa;Доменные KPI,&#xa;учёт поздних событий" vertex="1">
+          <mxGeometry height="100" width="220" x="910" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="write" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;whiteSpace=wrap;" value="Запись результатов&#xa;[Компонент: Sink]&#xa;Идемпотентное обновление" vertex="1">
+          <mxGeometry height="100" width="220" x="1220" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="catalog" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;whiteSpace=wrap;" value="Каталог данных и схем&#xa;[Контейнер: Schema Registry]&#xa;Контракты, владельцы, KPI" vertex="1">
+          <mxGeometry height="100" width="220" x="620" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="marts" parent="1" style="shape=cylinder;boundedLbl=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;whiteSpace=wrap;" value="Доменные витрины&#xa;[Контейнер: ClickHouse]&#xa;Данные для отчётов" vertex="1">
+          <mxGeometry height="100" width="220" x="1220" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="history" parent="1" style="shape=cylinder;boundedLbl=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;whiteSpace=wrap;" value="Разрешённая история&#xa;[Контейнер: S3 / Parquet]&#xa;Данные для пересчётов" vertex="1">
+          <mxGeometry height="100" width="220" x="620" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="kafka" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="receive" value="События">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="receive" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="validate" value="Событие">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="catalog" value="HTTPS: схема и правила">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="aggregate" value="Данные">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="aggregate" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="write" value="Показатели">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="write" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;" target="marts" value="SQL: обновление витрин">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="history" value="S3: запись истории">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="history" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" target="aggregate" value="S3: данные для пересчёта">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;exitX=0.2;exitY=1;entryX=0.5;entryY=1;" target="kafka" value="Kafka: ошибки → DLQ">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="664" y="530" />
+              <mxPoint x="140" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
