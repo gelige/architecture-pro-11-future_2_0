@@ -1,0 +1,70 @@
+name: Task2 Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Окружение
+        required: true
+        type: choice
+        options: [dev, stage, prod]
+        default: dev
+      apply:
+        description: Подтверждаю применение изменений (иначе только plan)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-task2-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    # Облачные ключи доступны только коду из основной ветки.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: ${{ inputs.environment }}
+    env:
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      TF_VAR_folder_id: ${{ vars.YC_FOLDER_ID }}
+      TF_VAR_subnet_id: ${{ vars.YC_SUBNET_ID }}
+      TF_VAR_image_id: ${{ vars.YC_IMAGE_ID }}
+      TF_VAR_ssh_key: ${{ secrets.SSH_PUBLIC_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.11.4
+          terraform_wrapper: false
+      - name: Configure Yandex authentication
+        shell: bash
+        env:
+          YC_KEY: ${{ secrets.YC_SERVICE_ACCOUNT_KEY }}
+        run: |
+          umask 077
+          printf '%s' "$YC_KEY" > "$RUNNER_TEMP/yc-key.json"
+          echo "YC_SERVICE_ACCOUNT_KEY_FILE=$RUNNER_TEMP/yc-key.json" >> "$GITHUB_ENV"
+      - name: Init, validate, plan and optional apply
+        shell: bash
+        env:
+          TARGET_ENV: ${{ inputs.environment }}
+          APPLY_APPROVED: ${{ inputs.apply }}
+        run: |
+          action=plan
+          if [[ "$APPLY_APPROVED" == true ]]; then action=apply; fi
+          bash Task2Advanced/scripts/deploy.sh "$TARGET_ENV" "$action"
+      - name: Remove temporary credentials
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/yc-key.json"
